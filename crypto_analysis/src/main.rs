@@ -2,6 +2,8 @@ use std::env;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use std::thread;
 use regex::bytes::Regex;
 
 struct CryptoPattern {
@@ -20,42 +22,74 @@ impl CryptoPattern {
     }
 }
 
-// Helper struct to write to both stdout and file
+// Thread-safe dual writer
 struct DualWriter {
-    file: Option<fs::File>,
+    file: Option<Arc<Mutex<fs::File>>>,
 }
 
 impl DualWriter {
     fn new(output_file: Option<&str>) -> std::io::Result<Self> {
         let file = if let Some(path) = output_file {
-            Some(fs::File::create(path)?)
+            Some(Arc::new(Mutex::new(fs::File::create(path)?)))
         } else {
             None
         };
         Ok(Self { file })
     }
 
-    fn writeln(&mut self, text: &str) {
+    fn writeln(&self, text: &str) {
         // Print to stdout
         println!("{}", text);
         
         // Write to file if available
-        if let Some(ref mut f) = self.file {
-            writeln!(f, "{}", text).unwrap_or_else(|e| {
-                eprintln!("Warning: Failed to write to file: {}", e);
-            });
+        if let Some(ref f) = self.file {
+            if let Ok(mut file) = f.lock() {
+                writeln!(file, "{}", text).unwrap_or_else(|e| {
+                    eprintln!("Warning: Failed to write to file: {}", e);
+                });
+            }
         }
     }
 
-    fn write(&mut self, text: &str) {
+    fn write(&self, text: &str) {
         // Print to stdout
         print!("{}", text);
         
         // Write to file if available
-        if let Some(ref mut f) = self.file {
-            write!(f, "{}", text).unwrap_or_else(|e| {
-                eprintln!("Warning: Failed to write to file: {}", e);
-            });
+        if let Some(ref f) = self.file {
+            if let Ok(mut file) = f.lock() {
+                write!(file, "{}", text).unwrap_or_else(|e| {
+                    eprintln!("Warning: Failed to write to file: {}", e);
+                });
+            }
+        }
+    }
+
+    fn clone_file_handle(&self) -> Option<Arc<Mutex<fs::File>>> {
+        self.file.clone()
+    }
+}
+
+// Thread-safe result writer for scanning results
+struct ResultWriter {
+    file: Option<Arc<Mutex<fs::File>>>,
+}
+
+impl ResultWriter {
+    fn new(file_handle: Option<Arc<Mutex<fs::File>>>) -> Self {
+        Self { file: file_handle }
+    }
+
+    fn write_result(&self, result: &str) {
+        // Print to stdout
+        print!("{}", result);
+        std::io::stdout().flush().ok();
+        
+        // Write to file if available
+        if let Some(ref f) = self.file {
+            if let Ok(mut file) = f.lock() {
+                write!(file, "{}", result).ok();
+            }
         }
     }
 }
@@ -309,10 +343,11 @@ fn scan_path_executables() -> Vec<PathBuf> {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let patterns = get_crypto_patterns();
+    let _patterns = get_crypto_patterns();
     
-    // Check for output file option (-o or --output)
+    // Check for output file option (-o or --output) and thread count (-j or --jobs)
     let mut output_file = None;
+    let mut num_threads = num_cpus::get(); // Default to number of CPU cores
     let mut skip_next = false;
     let mut scan_args = Vec::new();
     
@@ -332,13 +367,29 @@ fn main() {
             }
         } else if arg.starts_with("--output=") {
             output_file = Some(arg.trim_start_matches("--output=").to_string());
+        } else if arg == "-j" || arg == "--jobs" {
+            if i + 1 < args.len() {
+                num_threads = args[i + 1].parse().unwrap_or_else(|_| {
+                    eprintln!("Error: {} requires a number argument", arg);
+                    std::process::exit(1);
+                });
+                skip_next = true;
+            } else {
+                eprintln!("Error: {} requires a number argument", arg);
+                std::process::exit(1);
+            }
+        } else if arg.starts_with("--jobs=") {
+            num_threads = arg.trim_start_matches("--jobs=").parse().unwrap_or_else(|_| {
+                eprintln!("Error: --jobs requires a number argument");
+                std::process::exit(1);
+            });
         } else {
             scan_args.push(arg.clone());
         }
     }
     
     // Initialize dual writer
-    let mut writer = DualWriter::new(output_file.as_deref()).unwrap_or_else(|e| {
+    let writer = DualWriter::new(output_file.as_deref()).unwrap_or_else(|e| {
         eprintln!("Error: Failed to create output file: {}", e);
         std::process::exit(1);
     });
@@ -346,6 +397,7 @@ fn main() {
     if let Some(ref file) = output_file {
         eprintln!("Writing output to file: {}", file);
     }
+    eprintln!("Using {} threads for scanning", num_threads);
     
     let files_to_scan: Vec<PathBuf> = if !scan_args.is_empty() {
         // User provided files/directories
@@ -395,15 +447,43 @@ fn main() {
     writer.writeln(&format!("{:<50}\t{}", "File", "Primitives"));
     writer.writeln(&format!("{:<50}\t{}", "====", "=========="));
     
-    // Scan files and print results
-    for file in files_to_scan {
-        if let Some(found_primitives) = scan_file(&file, &patterns) {
-            let file_str = file.to_string_lossy();
-            writer.write(&format!("{:<50}\t", file_str));
-            for primitive in found_primitives {
-                writer.write(&format!("{} ", primitive));
+    // Create shared result writer for threads
+    let file_handle = writer.clone_file_handle();
+    let result_writer = Arc::new(ResultWriter::new(file_handle));
+    
+    // Split files into chunks for each thread
+    let chunk_size = (files_to_scan.len() + num_threads - 1) / num_threads;
+    let file_chunks: Vec<Vec<PathBuf>> = files_to_scan
+        .chunks(chunk_size)
+        .map(|chunk| chunk.to_vec())
+        .collect();
+    
+    // Spawn worker threads
+    let mut handles = vec![];
+    
+    for chunk in file_chunks {
+        let patterns_clone = get_crypto_patterns(); // Each thread gets its own copy
+        let result_writer_clone = Arc::clone(&result_writer);
+        
+        let handle = thread::spawn(move || {
+            for file in chunk {
+                if let Some(found_primitives) = scan_file(&file, &patterns_clone) {
+                    let file_str = file.to_string_lossy();
+                    let mut result = format!("{:<50}\t", file_str);
+                    for primitive in found_primitives {
+                        result.push_str(&format!("{} ", primitive));
+                    }
+                    result.push('\n');
+                    result_writer_clone.write_result(&result);
+                }
             }
-            writer.writeln("");
-        }
+        });
+        
+        handles.push(handle);
+    }
+    
+    // Wait for all threads to complete
+    for handle in handles {
+        handle.join().unwrap();
     }
 }

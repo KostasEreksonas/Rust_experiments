@@ -20590,3 +20590,16 @@
 
 File                                              	Primitives
 ====                                              	==========
+/usr/lib64/libkeyutils.so                         	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 ZLIB_lengthextrabits 
+/usr/bin/kdestroy                                 	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_LE32 CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 ZLIB_lengthextrabits 
+/lib64/libevent_openssl-2.1.so.7.0.1              	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 ZLIB_lengthextrabits 
+/lib/libgailutil-3.so.0.0.0                       	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e65537_LE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 ZLIB_lengthextrabits 
+/usr/lib/libnghttp3.so.9.6.1                      	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e65537_LE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 EC_p192 EC_p224 EC_p256 EC_p384 ZLIB_lengthextrabits 
+/usr/lib64/libQt6QuickWidgets.so                  	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 EC_p192 EC_p224 EC_p384 ZLIB_lengthextrabits 
+/lib/libgexiv2.so.2.14.6                          	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 ZLIB_lengthextrabits 
+/usr/lib/libnewt.so.0.52.25                       	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 EC_p192 EC_p224 EC_p384 ZLIB_lengthextrabits 
+/usr/lib/libduktape.so.207.20700                  	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e65537_LE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 EC_p192 EC_p224 EC_p384 ZLIB_lengthextrabits 
+/usr/lib64/libtracefs.so.1                        	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 EC_p192 EC_p224 EC_p384 ZLIB_lengthextrabits 
+/usr/lib/libminizip.so.1.0.0                      	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e65537_LE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 ZLIB_lengthextrabits 
+/usr/lib/libdrm_amdgpu.so.1.131.0                 	RSA_e65537_BE32 RSA_e65537_LE32 RSA_e65537_BE64 RSA_e65537_LE64 RSA_e3_BE32 RSA_e3_LE32 RSA_e17_BE32 RSA_e257_LE32 IKE_prime CRC32_lzma_1 CRC32_m_tab_be CRC32_m_tab_le CRC32_ms_0 ZLIB_lengthextrabits 
+...
